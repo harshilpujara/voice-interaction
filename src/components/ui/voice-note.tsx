@@ -24,6 +24,24 @@ export const RecorderState = {
 
 export type RecorderState = (typeof RecorderState)[keyof typeof RecorderState];
 
+/* Presentation lifecycle, separate from the recording state machine above:
+   the control group starts parked below the viewport, waits, then is
+   summoned up into its resting position exactly once per mount. Nothing
+   about RecorderState changes because of this — it only gates whether
+   the glass-group sits off-screen or in place. */
+const PresentationState = {
+  DESKTOP_IDLE: 'DESKTOP_IDLE',
+  MIC_ENTERING: 'MIC_ENTERING',
+  RECORDING_READY: 'RECORDING_READY',
+} as const;
+
+type PresentationState = (typeof PresentationState)[keyof typeof PresentationState];
+
+const MIC_ENTRANCE_DELAY_MS = 5000;
+/* Generous enough to clear the viewport from any resting position near
+   the bottom edge, on any reasonable device height. */
+const MIC_ENTRANCE_OFFSET = 260;
+
 interface VoiceNoteRecorderProps {
   onSend?: (data: { duration: number; blob: Blob | null }) => void;
   onCancel?: () => void;
@@ -40,6 +58,16 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
   const [duration, setDuration] = useState(0);
   const [playbackTime, setPlaybackTime] = useState(0);
   const [hasCompletedPlayback, setHasCompletedPlayback] = useState(false);
+  const [presentation, setPresentation] = useState<PresentationState>(
+    PresentationState.DESKTOP_IDLE,
+  );
+
+  useEffect(() => {
+    const entranceTimer = setTimeout(() => {
+      setPresentation(PresentationState.MIC_ENTERING);
+    }, MIC_ENTRANCE_DELAY_MS);
+    return () => clearTimeout(entranceTimer);
+  }, []);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const playbackTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -54,6 +82,11 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
 
   const spring: Transition = { type: 'spring', stiffness: 480, damping: 46, mass: 0.8 };
   const iconSpring: Transition = { type: 'spring', stiffness: 520, damping: 34, mass: 0.6 };
+  // Same spring family as the interaction motions above, tuned for a much
+  // larger throw distance (~260px vs a few px of hover/morph travel) so the
+  // physical settle is actually visible instead of resolving almost
+  // instantly, without introducing any bounce.
+  const entranceSpring: Transition = { type: 'spring', stiffness: 40, damping: 12, mass: 1.2 };
 
   const beginRecordingInterval = () => {
     timerRef.current = setInterval(() => {
@@ -183,8 +216,20 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
 
   const actionBtnClass = `w-16 h-16 rounded-full flex items-center justify-center shrink-0 glass-control`;
 
+  const isDesktopIdle = presentation === PresentationState.DESKTOP_IDLE;
+
   return (
-    <div className="flex min-h-full w-full flex-col items-center justify-center space-y-12 bg-transparent p-8">
+    <motion.div
+      className={`flex w-full flex-col items-center p-8 ${isDesktopIdle ? 'pointer-events-none' : ''}`}
+      initial={{ y: MIC_ENTRANCE_OFFSET }}
+      animate={{ y: isDesktopIdle ? MIC_ENTRANCE_OFFSET : 0 }}
+      transition={entranceSpring}
+      onAnimationComplete={() => {
+        if (presentation === PresentationState.MIC_ENTERING) {
+          setPresentation(PresentationState.RECORDING_READY);
+        }
+      }}
+    >
       <div className="glass-group flex items-center p-1.5">
         <MotionConfig transition={spring}>
           <GlassSlot show={state !== RecorderState.IDLE} width={78}>
@@ -407,7 +452,7 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
           </GlassSlot>
         </MotionConfig>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
