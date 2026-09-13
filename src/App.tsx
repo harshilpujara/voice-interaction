@@ -1,9 +1,30 @@
+import { useEffect, useRef } from 'react';
+import Hls from 'hls.js';
 import { VoiceNote } from '@/components/ui/voice-note';
 
-const DESKTOP_VIDEO_URL =
-  'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260306_115329_5e00c9c5-4d69-49b7-94c3-9c31c60bb644.mp4';
+const DESKTOP_STREAM_URL =
+  'https://stream.mux.com/T6oQJQ02cQ6N01TR6iHwZkKFkbepS34dkkIc9iukgy400g.m3u8';
 
 function App() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = DESKTOP_STREAM_URL;
+      return;
+    }
+
+    if (Hls.isSupported()) {
+      const hls = new Hls();
+      hls.loadSource(DESKTOP_STREAM_URL);
+      hls.attachMedia(video);
+      return () => hls.destroy();
+    }
+  }, []);
+
   const handleSend = (data: { duration: number; blob: Blob | null }) => {
     console.log('Voice note sent:', data);
   };
@@ -11,8 +32,8 @@ function App() {
   return (
     <div className="relative h-svh w-full overflow-hidden">
       <video
+        ref={videoRef}
         className="desktop-video"
-        src={DESKTOP_VIDEO_URL}
         autoPlay
         loop
         muted
