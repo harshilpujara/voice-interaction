@@ -153,15 +153,16 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
 
   return (
     <div className="flex min-h-full w-full flex-col items-center justify-center space-y-12 bg-transparent p-8">
-      <div className="flex items-center gap-2.5">
+      <div className="glass-group flex items-center p-1.5">
         <MotionConfig transition={spring}>
           <AnimatePresence mode="popLayout">
             {state !== RecorderState.IDLE && (
               <motion.button
                 key="cancel-btn"
-                initial={{ opacity: 0, filter: 'blur(3px)', scale: 0.85, x: 20 }}
-                animate={{ opacity: 1, filter: 'blur(0)', scale: 1, x: 0 }}
-                exit={{ opacity: 0, filter: 'blur(3px)', scale: 0.85, x: 20 }}
+                layout
+                initial={{ opacity: 0, scale: 0.4 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.4 }}
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.94 }}
                 onClick={cancelRecording}
@@ -171,6 +172,8 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
               </motion.button>
             )}
           </AnimatePresence>
+
+          <GlassBridge show={state !== RecorderState.IDLE} />
 
           <motion.div
             animate={{
@@ -345,13 +348,16 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
             </AnimatePresence>
           </motion.div>
 
+          <GlassBridge show={isRecordingOrPaused} />
+
           <AnimatePresence mode="popLayout">
             {isRecordingOrPaused && (
               <motion.button
                 key="pause-resume-btn"
-                initial={{ opacity: 0, filter: 'blur(3px)', scale: 0.85, x: -20 }}
-                animate={{ opacity: 1, filter: 'blur(0)', scale: 1, x: 0 }}
-                exit={{ opacity: 0, filter: 'blur(3px)', scale: 0.85, x: -20 }}
+                layout
+                initial={{ opacity: 0, scale: 0.4 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.4 }}
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.94 }}
                 onClick={state === RecorderState.RECORDING ? pauseRecording : resumeRecording}
@@ -386,13 +392,16 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
             )}
           </AnimatePresence>
 
+          <GlassBridge show={isRecordingOrPaused} />
+
           <AnimatePresence mode="popLayout">
             {isRecordingOrPaused && (
               <motion.button
                 key="stop-btn"
-                initial={{ opacity: 0, filter: 'blur(3px)', scale: 0.85, x: -20 }}
-                animate={{ opacity: 1, filter: 'blur(0)', scale: 1, x: 0 }}
-                exit={{ opacity: 0, filter: 'blur(3px)', scale: 0.85, x: -20 }}
+                layout
+                initial={{ opacity: 0, scale: 0.4 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.4 }}
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.94 }}
                 onClick={stopRecording}
@@ -403,13 +412,16 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
             )}
           </AnimatePresence>
 
+          <GlassBridge show={isReviewingOrPlaying} />
+
           <AnimatePresence mode="popLayout">
             {isReviewingOrPlaying && (
               <motion.button
                 key="send-btn"
-                initial={{ opacity: 0, filter: 'blur(3px)', scale: 0.85, x: -20 }}
-                animate={{ opacity: 1, filter: 'blur(0)', scale: 1, x: 0 }}
-                exit={{ opacity: 0, filter: 'blur(3px)', scale: 0.85, x: -20 }}
+                layout
+                initial={{ opacity: 0, scale: 0.4 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.4 }}
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.94 }}
                 onClick={handleSend}
@@ -424,6 +436,29 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
     </div>
   );
 };
+
+interface GlassBridgeProps {
+  show: boolean;
+}
+
+/* The neck connecting two adjacent glass controls. Its own geometry never
+   changes (a fixed capsule sliver) — only its vertical scale and opacity
+   animate, driven by the same spring as the control it borders, so the
+   pair reads as one material stretching apart / fusing back together
+   rather than two independent shapes crossfading past each other. */
+const GlassBridge: React.FC<GlassBridgeProps> = ({ show }) => (
+  <AnimatePresence>
+    {show && (
+      <motion.div
+        key="bridge"
+        initial={{ scaleY: 1, opacity: 0.85 }}
+        animate={{ scaleY: 0.14, opacity: 0 }}
+        exit={{ scaleY: 1, opacity: 0.85 }}
+        className="glass-bridge h-16 w-3.5 shrink-0"
+      />
+    )}
+  </AnimatePresence>
+);
 
 interface AnimatedNumberProps {
   value: number;
