@@ -35,6 +35,7 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
   const [duration, setDuration] = useState(0);
   const [playbackTime, setPlaybackTime] = useState(0);
   const [hasCompletedPlayback, setHasCompletedPlayback] = useState(false);
+  const [playSessionId, setPlaySessionId] = useState(0);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const playbackTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -92,6 +93,7 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
   const startPlayback = () => {
     setState(RecorderState.PLAYING);
     setPlaybackTime(duration);
+    setPlaySessionId((id) => id + 1);
     playbackTimerRef.current = setInterval(() => {
       setPlaybackTime((prev) => {
         if (prev <= 1) {
@@ -151,15 +153,6 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
     state === RecorderState.PLAYING ||
     (state === RecorderState.REVIEWING && hasCompletedPlayback);
 
-  const playbackProgress =
-    state === RecorderState.PLAYING
-      ? duration > 0
-        ? Math.min(1, Math.max(0, (duration - playbackTime) / duration))
-        : 1
-      : hasCompletedPlayback
-        ? 1
-        : 0;
-
   const pillGlowOpacity = isRecordingOrPaused ? 0.85 : state === RecorderState.PLAYING ? 0.4 : 0;
 
   const actionBtnClass = `w-16 h-16 rounded-full flex items-center justify-center shrink-0 glass-control`;
@@ -208,6 +201,7 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
                     transition={{ duration: 0.25 }}
                   >
                     <motion.rect
+                      key={playSessionId}
                       x="2"
                       y="2"
                       rx="9999"
@@ -218,10 +212,13 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
                       strokeWidth="2.5"
                       pathLength={1}
                       strokeDasharray="1"
-                      initial={false}
-                      animate={{ strokeDashoffset: 1 - playbackProgress }}
-                      transition={{ duration: 1, ease: 'linear' }}
                       strokeLinecap="round"
+                      initial={{ strokeDashoffset: 1 }}
+                      animate={{ strokeDashoffset: 0 }}
+                      transition={{
+                        duration: Math.max(duration, 0.1),
+                        ease: 'linear',
+                      }}
                     />
                   </motion.svg>
                 )}
