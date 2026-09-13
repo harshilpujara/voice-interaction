@@ -155,25 +155,17 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
     <div className="flex min-h-full w-full flex-col items-center justify-center space-y-12 bg-transparent p-8">
       <div className="glass-group flex items-center p-1.5">
         <MotionConfig transition={spring}>
-          <AnimatePresence mode="popLayout">
-            {state !== RecorderState.IDLE && (
-              <motion.button
-                key="cancel-btn"
-                layout
-                initial={{ opacity: 0, scale: 0.4 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.4 }}
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.94 }}
-                onClick={cancelRecording}
-                className={actionBtnClass}
-              >
-                <X size={26} className="glass-icon text-white/85" />
-              </motion.button>
-            )}
-          </AnimatePresence>
-
-          <GlassBridge show={state !== RecorderState.IDLE} />
+          <GlassSlot show={state !== RecorderState.IDLE} width={78}>
+            <motion.button
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.94 }}
+              onClick={cancelRecording}
+              className={actionBtnClass}
+            >
+              <X size={26} className="glass-icon text-white/85" />
+            </motion.button>
+            <GlassNeck />
+          </GlassSlot>
 
           <motion.div
             animate={{
@@ -181,7 +173,7 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
             }}
             className={`relative z-20 rounded-full flex items-center justify-center overflow-hidden glass-control ${
               state === RecorderState.IDLE ? 'h-16 w-16' : 'h-16 px-6'
-            } ${isRecordingOrPaused ? 'glass-control--recording' : ''}`}
+            }`}
           >
             <AnimatePresence mode="popLayout">
               {state === RecorderState.PLAYING && (
@@ -348,116 +340,107 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
             </AnimatePresence>
           </motion.div>
 
-          <GlassBridge show={isRecordingOrPaused} />
+          <GlassSlot show={isRecordingOrPaused} width={156}>
+            <GlassNeck />
+            <motion.button
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.94 }}
+              onClick={state === RecorderState.RECORDING ? pauseRecording : resumeRecording}
+              className={actionBtnClass}
+            >
+              <AnimatePresence mode="wait" initial={false}>
+                {state === RecorderState.RECORDING ? (
+                  <motion.span
+                    key="pause-icon"
+                    initial={{ opacity: 0, scale: 0.7 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.7 }}
+                    transition={iconSpring}
+                    className="glass-icon flex items-center justify-center"
+                  >
+                    <Pause size={24} className="text-white/85" fill="currentColor" />
+                  </motion.span>
+                ) : (
+                  <motion.span
+                    key="resume-icon"
+                    initial={{ opacity: 0, scale: 0.7 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.7 }}
+                    transition={iconSpring}
+                    className="glass-icon flex items-center justify-center"
+                  >
+                    <Play size={24} className="text-white" fill="currentColor" />
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </motion.button>
+            <GlassNeck />
+            <motion.button
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.94 }}
+              onClick={stopRecording}
+              className={actionBtnClass}
+            >
+              <Square size={22} className="glass-icon text-red-500" fill="currentColor" />
+            </motion.button>
+          </GlassSlot>
 
-          <AnimatePresence mode="popLayout">
-            {isRecordingOrPaused && (
-              <motion.button
-                key="pause-resume-btn"
-                layout
-                initial={{ opacity: 0, scale: 0.4 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.4 }}
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.94 }}
-                onClick={state === RecorderState.RECORDING ? pauseRecording : resumeRecording}
-                className={actionBtnClass}
-              >
-                <AnimatePresence mode="wait" initial={false}>
-                  {state === RecorderState.RECORDING ? (
-                    <motion.span
-                      key="pause-icon"
-                      initial={{ opacity: 0, scale: 0.7 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.7 }}
-                      transition={iconSpring}
-                      className="glass-icon flex items-center justify-center"
-                    >
-                      <Pause size={24} className="text-white/85" fill="currentColor" />
-                    </motion.span>
-                  ) : (
-                    <motion.span
-                      key="resume-icon"
-                      initial={{ opacity: 0, scale: 0.7 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.7 }}
-                      transition={iconSpring}
-                      className="glass-icon flex items-center justify-center"
-                    >
-                      <Play size={24} className="text-white" fill="currentColor" />
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </motion.button>
-            )}
-          </AnimatePresence>
-
-          <GlassBridge show={isRecordingOrPaused} />
-
-          <AnimatePresence mode="popLayout">
-            {isRecordingOrPaused && (
-              <motion.button
-                key="stop-btn"
-                layout
-                initial={{ opacity: 0, scale: 0.4 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.4 }}
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.94 }}
-                onClick={stopRecording}
-                className={actionBtnClass}
-              >
-                <Square size={22} className="glass-icon text-red-500" fill="currentColor" />
-              </motion.button>
-            )}
-          </AnimatePresence>
-
-          <GlassBridge show={isReviewingOrPlaying} />
-
-          <AnimatePresence mode="popLayout">
-            {isReviewingOrPlaying && (
-              <motion.button
-                key="send-btn"
-                layout
-                initial={{ opacity: 0, scale: 0.4 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.4 }}
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.94 }}
-                onClick={handleSend}
-                className={actionBtnClass}
-              >
-                <RiSendPlaneFill size={24} className="glass-icon text-white" />
-              </motion.button>
-            )}
-          </AnimatePresence>
+          <GlassSlot show={isReviewingOrPlaying} width={78}>
+            <GlassNeck />
+            <motion.button
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.94 }}
+              onClick={handleSend}
+              className={actionBtnClass}
+            >
+              <RiSendPlaneFill size={24} className="glass-icon text-white" />
+            </motion.button>
+          </GlassSlot>
         </MotionConfig>
       </div>
     </div>
   );
 };
 
-interface GlassBridgeProps {
+interface GlassSlotProps {
   show: boolean;
+  width: number;
+  children: React.ReactNode;
 }
 
-/* The neck connecting two adjacent glass controls. Its own geometry never
-   changes (a fixed capsule sliver) — only its vertical scale and opacity
-   animate, driven by the same spring as the control it borders, so the
-   pair reads as one material stretching apart / fusing back together
-   rather than two independent shapes crossfading past each other. */
-const GlassBridge: React.FC<GlassBridgeProps> = ({ show }) => (
+/* A slot bundles one or more controls together with their connecting
+   necks so they can never mount/unmount out of sync with each other.
+   The slot's own width is the single source of truth for the layout: it
+   tweens from 0 to its full content width (and back), so surrounding
+   controls continuously reflow with the collapse/expand instead of
+   snapping past a leftover empty gap. */
+const GlassSlot: React.FC<GlassSlotProps> = ({ show, width, children }) => (
   <AnimatePresence>
     {show && (
       <motion.div
-        key="bridge"
-        initial={{ scaleY: 1, opacity: 0.85 }}
-        animate={{ scaleY: 0.14, opacity: 0 }}
-        exit={{ scaleY: 1, opacity: 0.85 }}
-        className="glass-bridge h-16 w-3.5 shrink-0"
-      />
+        key="slot"
+        initial={{ width: 0, opacity: 0 }}
+        animate={{ width, opacity: 1 }}
+        exit={{ width: 0, opacity: 0 }}
+        className="flex h-16 items-center overflow-hidden"
+      >
+        {children}
+      </motion.div>
     )}
   </AnimatePresence>
+);
+
+/* The neck connecting two adjacent glass controls within a slot. Its
+   geometry never changes (a fixed capsule sliver) — only its vertical
+   scale and opacity animate on mount, so the pair reads as one material
+   stretching apart rather than two independent shapes appearing side by
+   side. */
+const GlassNeck: React.FC = () => (
+  <motion.div
+    initial={{ scaleY: 1, opacity: 0.85 }}
+    animate={{ scaleY: 0.14, opacity: 0 }}
+    className="glass-bridge h-16 w-3.5 shrink-0"
+  />
 );
 
 interface AnimatedNumberProps {
