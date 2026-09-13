@@ -220,10 +220,7 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
                       strokeDasharray="1"
                       initial={false}
                       animate={{ strokeDashoffset: 1 - playbackProgress }}
-                      transition={{
-                        duration: state === RecorderState.PLAYING ? 1 : 0,
-                        ease: 'linear',
-                      }}
+                      transition={{ duration: 1, ease: 'linear' }}
                       strokeLinecap="round"
                     />
                   </motion.svg>
