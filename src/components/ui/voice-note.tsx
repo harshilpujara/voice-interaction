@@ -27,13 +27,14 @@ export type RecorderState = (typeof RecorderState)[keyof typeof RecorderState];
 interface VoiceNoteRecorderProps {
   onSend?: (data: { duration: number; blob: Blob | null }) => void;
   onCancel?: () => void;
+  /** Safety ceiling only — recording length is controlled by pressing Stop. */
   maxDuration?: number;
 }
 
 export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
   onSend,
   onCancel,
-  maxDuration = 4,
+  maxDuration = 300,
 }) => {
   const [state, setState] = useState<RecorderState>(RecorderState.IDLE);
   const [duration, setDuration] = useState(0);
