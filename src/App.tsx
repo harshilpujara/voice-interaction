@@ -6,7 +6,9 @@ function App() {
   };
 
   return (
-    <div className="flex min-h-svh items-center justify-center bg-background">
+    <div className="flex min-h-svh items-center justify-center">
+      <div className="ambient-bg" />
+      <div className="ambient-grain" />
       <VoiceNote onSend={handleSend} />
     </div>
   );

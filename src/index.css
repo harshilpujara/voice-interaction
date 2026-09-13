@@ -79,3 +79,117 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Ambient backdrop: recreated gradient (teal -> cream -> ink), zoomed so the
+   dark corner reads as a trimmed accent rather than the dominant field. */
+.ambient-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -20;
+  background:
+    radial-gradient(ellipse 60% 50% at 10% 6%, rgba(146, 189, 176, 0.65), transparent 60%),
+    radial-gradient(ellipse 70% 65% at 88% 92%, rgba(3, 7, 12, 0.96), transparent 52%),
+    linear-gradient(148deg, #eef3f0 0%, #f2f5f2 24%, #dde5e1 42%, #7c9490 58%, #2c3a3c 74%, #0a0e10 100%);
+  background-size: 150% 150%;
+  background-position: 22% 15%;
+}
+
+.ambient-grain {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  opacity: 0.22;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Liquid glass surface: translucent, blurred, light-refracting layer used
+   for the recorder's pill and controls. */
+.glass-surface {
+  position: relative;
+  isolation: isolate;
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  border-bottom-color: rgba(255, 255, 255, 0.12);
+  border-right-color: rgba(255, 255, 255, 0.2);
+  background: linear-gradient(
+    155deg,
+    rgba(255, 255, 255, 0.38) 0%,
+    rgba(255, 255, 255, 0.1) 35%,
+    rgba(255, 255, 255, 0.16) 70%,
+    rgba(255, 255, 255, 0.3) 100%
+  );
+  backdrop-filter: blur(18px) saturate(190%) brightness(1.05);
+  -webkit-backdrop-filter: blur(18px) saturate(190%) brightness(1.05);
+  box-shadow:
+    inset 1px 1px 1px rgba(255, 255, 255, 0.8),
+    inset -1px -1px 1px rgba(0, 0, 0, 0.06),
+    0 4px 12px rgba(10, 20, 20, 0.18),
+    0 18px 40px rgba(5, 12, 14, 0.28);
+  transition:
+    background 0.35s ease,
+    box-shadow 0.35s ease,
+    border-color 0.35s ease;
+}
+
+.glass-surface:hover {
+  background: linear-gradient(
+    155deg,
+    rgba(255, 255, 255, 0.48) 0%,
+    rgba(255, 255, 255, 0.14) 35%,
+    rgba(255, 255, 255, 0.2) 70%,
+    rgba(255, 255, 255, 0.36) 100%
+  );
+  box-shadow:
+    inset 1px 1px 1px rgba(255, 255, 255, 0.9),
+    inset -1px -1px 1px rgba(0, 0, 0, 0.08),
+    0 6px 16px rgba(10, 20, 20, 0.22),
+    0 22px 48px rgba(5, 12, 14, 0.34);
+}
+
+.glass-surface--recording {
+  border-color: rgba(255, 160, 150, 0.65);
+  border-bottom-color: rgba(120, 20, 15, 0.25);
+  background: linear-gradient(
+    155deg,
+    rgba(255, 130, 120, 0.42) 0%,
+    rgba(180, 40, 30, 0.18) 40%,
+    rgba(90, 12, 8, 0.28) 100%
+  );
+  box-shadow:
+    inset 1px 1px 1px rgba(255, 210, 205, 0.7),
+    inset -1px -1px 1px rgba(0, 0, 0, 0.2),
+    0 4px 14px rgba(180, 20, 10, 0.25),
+    0 18px 42px rgba(120, 10, 5, 0.32);
+}
+
+.glass-shine {
+  overflow: hidden;
+}
+
+.glass-shine::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.4) 46%,
+    transparent 62%
+  );
+  transform: translateX(-130%);
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.glass-shine:hover::after {
+  transform: translateX(130%);
+}
+
+/* Keeps icons crisp regardless of how light/dark the backdrop is behind
+   the translucent glass at that point. */
+.glass-icon {
+  filter:
+    drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4))
+    drop-shadow(0 0 1px rgba(255, 255, 255, 0.5));
+}

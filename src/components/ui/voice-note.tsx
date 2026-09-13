@@ -148,10 +148,10 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
     state === RecorderState.REVIEWING || state === RecorderState.PLAYING;
   const isPaused = state === RecorderState.PAUSED;
 
-  const actionBtnClass = `w-16 h-16 rounded-lg border flex items-center justify-center shrink-0 transition-colors duration-300 bg-background border-border`;
+  const actionBtnClass = `w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 glass-surface glass-shine`;
 
   return (
-    <div className="theme-injected flex min-h-full w-full flex-col items-center justify-center space-y-12 bg-transparent p-8 transition-colors duration-500">
+    <div className="flex min-h-full w-full flex-col items-center justify-center space-y-12 bg-transparent p-8">
       <div className="flex items-center gap-3">
         <MotionConfig transition={spring}>
           <AnimatePresence mode="popLayout">
@@ -161,10 +161,12 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
                 initial={{ opacity: 0, filter: 'blur(4px)', x: '95px' }}
                 animate={{ opacity: 1, filter: 'blur(0)', x: '0px' }}
                 exit={{ opacity: 1, filter: 'blur(4px)', x: '95px' }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.92 }}
                 onClick={cancelRecording}
                 className={actionBtnClass}
               >
-                <X size={28} className="text-muted-foreground" />
+                <X size={28} className="glass-icon text-white/85" />
               </motion.button>
             )}
           </AnimatePresence>
@@ -173,13 +175,9 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
             animate={{
               width: state === RecorderState.IDLE ? '65px' : '110px',
             }}
-            className={`relative z-20 rounded-lg flex items-center justify-center overflow-hidden transition-colors duration-300 ${
+            className={`relative z-20 rounded-2xl flex items-center justify-center overflow-hidden glass-surface glass-shine ${
               state === RecorderState.IDLE ? 'h-16 w-16' : 'h-16 px-6'
-            } rounded-lg border ${
-              isRecordingOrPaused
-                ? 'bg-destructive/10 border-none'
-                : 'border-border bg-background'
-            }`}
+            } ${isRecordingOrPaused ? 'glass-surface--recording' : ''}`}
           >
             <AnimatePresence mode="popLayout">
               {state === RecorderState.PLAYING && (
@@ -198,7 +196,7 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
                     width="calc(100% - 4px)"
                     height="calc(100% - 4px)"
                     fill="none"
-                    className="stroke-destructive"
+                    className="stroke-red-500"
                     strokeWidth="3"
                     pathLength={1}
                     strokeDasharray="1"
@@ -229,7 +227,7 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
                     width="calc(100% - 4px)"
                     height="calc(100% - 4px)"
                     fill="none"
-                    className="stroke-destructive"
+                    className="stroke-red-500"
                     strokeWidth="3"
                     pathLength={1}
                     strokeDasharray="1"
@@ -247,10 +245,12 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
                   initial={{ opacity: 0, filter: 'blur(8px)' }}
                   animate={{ opacity: 1, filter: 'blur(0)' }}
                   exit={{ opacity: 0, filter: 'blur(8px)' }}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
                   onClick={startRecording}
                   className="flex items-center justify-center"
                 >
-                  <Mic size={28} className="text-foreground" />
+                  <Mic size={28} className="glass-icon text-white" />
                 </motion.button>
               )}
 
@@ -274,7 +274,7 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
                             }
                       }
                       style={{ originY: 1 }}
-                      className="bg-destructive w-1.5 rounded-lg"
+                      className="bg-red-500 w-1.5 rounded-lg"
                     />
                   ))}
                 </motion.div>
@@ -289,15 +289,17 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
                   className="z-10 flex items-center gap-2"
                 >
                   <motion.button
+                    whileHover={{ scale: 1.08 }}
+                    whileTap={{ scale: 0.9 }}
                     onClick={
                       state === RecorderState.PLAYING
                         ? stopPlayback
                         : startPlayback
                     }
-                    className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors ${
+                    className={`glass-icon flex h-10 w-10 items-center justify-center rounded-lg transition-colors ${
                       state === RecorderState.PLAYING
-                        ? 'text-destructive'
-                        : 'text-foreground'
+                        ? 'text-red-400'
+                        : 'text-white'
                     }`}
                   >
                     {state === RecorderState.PLAYING ? (
@@ -307,7 +309,7 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
                     )}
                   </motion.button>
 
-                  <span className="text-foreground flex items-center justify-center gap-0.5 text-[20px] font-bold tabular-nums transition-colors">
+                  <span className="glass-icon text-white flex items-center justify-center gap-0.5 text-[20px] font-bold tabular-nums transition-colors">
                     <AnimatedNumber
                       value={
                         state === RecorderState.PLAYING
@@ -329,13 +331,15 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
                 initial={{ opacity: 0, filter: 'blur(4px)', x: -95 }}
                 animate={{ opacity: 1, filter: 'blur(0)', x: 0 }}
                 exit={{ opacity: 0, filter: 'blur(4px)', x: -95 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.92 }}
                 onClick={state === RecorderState.RECORDING ? pauseRecording : resumeRecording}
                 className={actionBtnClass}
               >
                 {state === RecorderState.RECORDING ? (
-                  <Pause size={26} className="text-muted-foreground" fill="currentColor" />
+                  <Pause size={26} className="glass-icon text-white/85" fill="currentColor" />
                 ) : (
-                  <Play size={26} className="text-foreground" fill="currentColor" />
+                  <Play size={26} className="glass-icon text-white" fill="currentColor" />
                 )}
               </motion.button>
             )}
@@ -348,10 +352,12 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
                 initial={{ opacity: 0, filter: 'blur(4px)', x: -95 }}
                 animate={{ opacity: 1, filter: 'blur(0)', x: 0 }}
                 exit={{ opacity: 0, filter: 'blur(4px)', x: -95 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.92 }}
                 onClick={stopRecording}
                 className={actionBtnClass}
               >
-                <Square size={24} className="text-destructive" fill="currentColor" />
+                <Square size={24} className="glass-icon text-red-500" fill="currentColor" />
               </motion.button>
             )}
           </AnimatePresence>
@@ -363,10 +369,12 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
                 initial={{ opacity: 0, filter: 'blur(4px)', x: -95 }}
                 animate={{ opacity: 1, filter: 'blur(0)', x: 0 }}
                 exit={{ opacity: 0, filter: 'blur(4px)', x: -95 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.92 }}
                 onClick={handleSend}
                 className={actionBtnClass}
               >
-                <RiSendPlaneFill size={26} className="text-foreground" />
+                <RiSendPlaneFill size={26} className="glass-icon text-white" />
               </motion.button>
             )}
           </AnimatePresence>
