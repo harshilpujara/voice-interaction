@@ -35,7 +35,6 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
   const [duration, setDuration] = useState(0);
   const [playbackTime, setPlaybackTime] = useState(0);
   const [hasCompletedPlayback, setHasCompletedPlayback] = useState(false);
-  const [playSessionId, setPlaySessionId] = useState(0);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const playbackTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -93,7 +92,6 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
   const startPlayback = () => {
     setState(RecorderState.PLAYING);
     setPlaybackTime(duration);
-    setPlaySessionId((id) => id + 1);
     playbackTimerRef.current = setInterval(() => {
       setPlaybackTime((prev) => {
         if (prev <= 1) {
@@ -149,6 +147,21 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
     state === RecorderState.REVIEWING || state === RecorderState.PLAYING;
   const isPaused = state === RecorderState.PAUSED;
 
+  const showProgressStroke =
+    state === RecorderState.PLAYING ||
+    (state === RecorderState.REVIEWING && hasCompletedPlayback);
+
+  const playbackProgress =
+    state === RecorderState.PLAYING
+      ? duration > 0
+        ? Math.min(1, Math.max(0, (duration - playbackTime) / duration))
+        : 1
+      : hasCompletedPlayback
+        ? 1
+        : 0;
+
+  const pillGlowOpacity = isRecordingOrPaused ? 0.85 : state === RecorderState.PLAYING ? 0.4 : 0;
+
   const actionBtnClass = `w-16 h-16 rounded-full flex items-center justify-center shrink-0 glass-control`;
 
   return (
@@ -157,6 +170,7 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
         <MotionConfig transition={spring}>
           <GlassSlot show={state !== RecorderState.IDLE} width={78}>
             <motion.button
+              variants={controlVariants}
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.94 }}
               onClick={cancelRecording}
@@ -167,74 +181,56 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
             <GlassNeck />
           </GlassSlot>
 
-          <motion.div
-            animate={{
-              width: state === RecorderState.IDLE ? '64px' : '124px',
-            }}
-            className={`relative z-20 rounded-full flex items-center justify-center overflow-hidden glass-control ${
-              state === RecorderState.IDLE ? 'h-16 w-16' : 'h-16 px-6'
-            }`}
-          >
-            <AnimatePresence mode="popLayout">
-              {state === RecorderState.PLAYING && (
-                <motion.svg
-                  key="playback-progress"
-                  className="pointer-events-none absolute inset-0 h-full w-full"
-                  initial={{ opacity: 0, filter: 'blur(8px)' }}
-                  animate={{ opacity: 1, filter: 'blur(0)' }}
-                  exit={{ opacity: 0, filter: 'blur(8px)' }}
-                >
-                  <motion.rect
-                    key={playSessionId}
-                    x="2"
-                    y="2"
-                    rx="9999"
-                    width="calc(100% - 4px)"
-                    height="calc(100% - 4px)"
-                    fill="none"
-                    className="stroke-red-500"
-                    strokeWidth="2.5"
-                    pathLength={1}
-                    strokeDasharray="1"
-                    strokeDashoffset="1"
-                    strokeLinecap="round"
-                    initial={{ strokeDashoffset: 1 }}
-                    animate={{ strokeDashoffset: 0 }}
-                    transition={{
-                      duration: Math.max(duration, 1),
-                      ease: 'linear',
-                    }}
-                  />
-                </motion.svg>
-              )}
+          <div className="relative flex items-center justify-center">
+            <motion.div
+              aria-hidden
+              className="pill-glow"
+              animate={{ opacity: pillGlowOpacity }}
+              transition={{ duration: 0.4 }}
+            />
 
-              {state === RecorderState.REVIEWING && hasCompletedPlayback && (
-                <motion.svg
-                  key="playback-progress-complete"
-                  className="pointer-events-none absolute inset-0 h-full w-full"
-                  initial={{ opacity: 0, filter: 'blur(8px)' }}
-                  animate={{ opacity: 1, filter: 'blur(0)' }}
-                  exit={{ opacity: 0, filter: 'blur(8px)' }}
-                >
-                  <motion.rect
-                    x="2"
-                    y="2"
-                    rx="9999"
-                    width="calc(100% - 4px)"
-                    height="calc(100% - 4px)"
-                    fill="none"
-                    className="stroke-red-500"
-                    strokeWidth="2.5"
-                    pathLength={1}
-                    strokeDasharray="1"
-                    strokeDashoffset={0}
-                    strokeLinecap="round"
-                  />
-                </motion.svg>
-              )}
-            </AnimatePresence>
+            <motion.div
+              animate={{
+                width: state === RecorderState.IDLE ? '64px' : '124px',
+              }}
+              className={`relative z-10 rounded-full flex items-center justify-center overflow-hidden glass-control ${
+                state === RecorderState.IDLE ? 'h-16 w-16' : 'h-16 px-6'
+              }`}
+            >
+              <AnimatePresence>
+                {showProgressStroke && (
+                  <motion.svg
+                    key="playback-progress"
+                    className="pointer-events-none absolute inset-0 h-full w-full"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.25 }}
+                  >
+                    <motion.rect
+                      x="2"
+                      y="2"
+                      rx="9999"
+                      width="calc(100% - 4px)"
+                      height="calc(100% - 4px)"
+                      fill="none"
+                      className="stroke-red-500"
+                      strokeWidth="2.5"
+                      pathLength={1}
+                      strokeDasharray="1"
+                      initial={false}
+                      animate={{ strokeDashoffset: 1 - playbackProgress }}
+                      transition={{
+                        duration: state === RecorderState.PLAYING ? 1 : 0,
+                        ease: 'linear',
+                      }}
+                      strokeLinecap="round"
+                    />
+                  </motion.svg>
+                )}
+              </AnimatePresence>
 
-            <AnimatePresence mode="popLayout" initial={false}>
+              <AnimatePresence mode="popLayout" initial={false}>
               {state === RecorderState.IDLE && (
                 <motion.button
                   key="mic-icon"
@@ -253,7 +249,7 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
               {isRecordingOrPaused && (
                 <motion.div
                   key="recording-ui"
-                  className="z-10 flex items-center gap-1.5"
+                  className="z-10 flex items-center gap-1.5 bar-bloom"
                 >
                   {barHeights.map((heights, i) => (
                     <motion.div
@@ -337,12 +333,14 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
                   </span>
                 </motion.div>
               )}
-            </AnimatePresence>
-          </motion.div>
+              </AnimatePresence>
+            </motion.div>
+          </div>
 
           <GlassSlot show={isRecordingOrPaused} width={156}>
             <GlassNeck />
             <motion.button
+              variants={controlVariants}
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.94 }}
               onClick={state === RecorderState.RECORDING ? pauseRecording : resumeRecording}
@@ -376,6 +374,7 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
             </motion.button>
             <GlassNeck />
             <motion.button
+              variants={controlVariants}
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.94 }}
               onClick={stopRecording}
@@ -388,6 +387,7 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
           <GlassSlot show={isReviewingOrPlaying} width={78}>
             <GlassNeck />
             <motion.button
+              variants={controlVariants}
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.94 }}
               onClick={handleSend}
@@ -408,6 +408,24 @@ interface GlassSlotProps {
   children: React.ReactNode;
 }
 
+/* Buttons and necks don't set their own initial/animate/exit — they
+   declare these two variants and inherit whichever one the parent slot
+   is currently in. That keeps every child perfectly synced to the
+   slot's own hidden/visible state (no independent AnimatePresence per
+   child, so nothing can desync into an orphaned leftover shape), and it
+   means the slot itself never needs `overflow: hidden` to hide
+   mid-collapse content — the content is fading/shrinking on its own,
+   so a control's hover scale is never clipped by its container. */
+const controlVariants = {
+  hidden: { opacity: 0, scale: 0.4 },
+  visible: { opacity: 1, scale: 1 },
+};
+
+const neckVariants = {
+  hidden: { scaleY: 1, opacity: 0.85 },
+  visible: { scaleY: 0.14, opacity: 0 },
+};
+
 /* A slot bundles one or more controls together with their connecting
    necks so they can never mount/unmount out of sync with each other.
    The slot's own width is the single source of truth for the layout: it
@@ -419,10 +437,11 @@ const GlassSlot: React.FC<GlassSlotProps> = ({ show, width, children }) => (
     {show && (
       <motion.div
         key="slot"
-        initial={{ width: 0, opacity: 0 }}
-        animate={{ width, opacity: 1 }}
-        exit={{ width: 0, opacity: 0 }}
-        className="flex h-16 items-center overflow-hidden"
+        variants={{ hidden: { width: 0, opacity: 0 }, visible: { width, opacity: 1 } }}
+        initial="hidden"
+        animate="visible"
+        exit="hidden"
+        className="flex h-16 items-center"
       >
         {children}
       </motion.div>
@@ -432,15 +451,11 @@ const GlassSlot: React.FC<GlassSlotProps> = ({ show, width, children }) => (
 
 /* The neck connecting two adjacent glass controls within a slot. Its
    geometry never changes (a fixed capsule sliver) — only its vertical
-   scale and opacity animate on mount, so the pair reads as one material
-   stretching apart rather than two independent shapes appearing side by
-   side. */
+   scale and opacity animate, inherited from the parent slot's current
+   variant, so the pair reads as one material stretching apart rather
+   than two independent shapes appearing side by side. */
 const GlassNeck: React.FC = () => (
-  <motion.div
-    initial={{ scaleY: 1, opacity: 0.85 }}
-    animate={{ scaleY: 0.14, opacity: 0 }}
-    className="glass-bridge h-16 w-3.5 shrink-0"
-  />
+  <motion.div variants={neckVariants} className="glass-bridge h-16 w-3.5 shrink-0" />
 );
 
 interface AnimatedNumberProps {

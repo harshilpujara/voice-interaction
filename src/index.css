@@ -190,3 +190,25 @@
   -webkit-backdrop-filter: blur(16px) saturate(150%);
   border: 1px solid rgba(255, 255, 255, 0.16);
 }
+
+/* Ambient red diffusion behind the recording pill: a soft blurred glow
+   sitting under the glass (not a box-shadow on the glass itself), read
+   through the translucent material rather than drawn as a ring around
+   it. Its opacity is driven by state (stronger while recording, more
+   restrained during playback, off otherwise) — see pillGlowOpacity in
+   voice-note.tsx. */
+.pill-glow {
+  position: absolute;
+  inset: -14px -9px;
+  border-radius: 9999px;
+  background: radial-gradient(closest-side, rgba(255, 64, 52, 0.55), rgba(255, 64, 52, 0) 72%);
+  filter: blur(13px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Very subtle luminance on the waveform bars while recording, echoing
+   the pill's ambient glow instead of a hard-edged shadow. */
+.bar-bloom {
+  filter: drop-shadow(0 0 5px rgba(255, 64, 52, 0.5));
+}
