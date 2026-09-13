@@ -6,6 +6,9 @@ import {
   AnimatePresence,
   type Transition,
   MotionConfig,
+  useMotionValue,
+  animate as animateValue,
+  type AnimationPlaybackControls,
 } from 'motion/react';
 import { Mic, X, Play, Pause, Square } from 'lucide-react';
 import { RiSendPlaneFill } from 'react-icons/ri';
@@ -16,6 +19,7 @@ export const RecorderState = {
   PAUSED: 'PAUSED',
   REVIEWING: 'REVIEWING',
   PLAYING: 'PLAYING',
+  PLAYBACK_PAUSED: 'PLAYBACK_PAUSED',
 } as const;
 
 export type RecorderState = (typeof RecorderState)[keyof typeof RecorderState];
@@ -35,10 +39,17 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
   const [duration, setDuration] = useState(0);
   const [playbackTime, setPlaybackTime] = useState(0);
   const [hasCompletedPlayback, setHasCompletedPlayback] = useState(false);
-  const [playSessionId, setPlaySessionId] = useState(0);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const playbackTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Drives the playback progress stroke directly (bypassing React render
+  // timing entirely): a single Motion animation instance whose own
+  // pause()/play() calls are the source of truth, so pausing/resuming
+  // playback pauses/resumes the stroke exactly in place rather than
+  // restarting or drifting relative to a separately-ticking timer.
+  const playbackDashOffset = useMotionValue(1);
+  const playbackAnimationRef = useRef<AnimationPlaybackControls | null>(null);
 
   const spring: Transition = { type: 'spring', stiffness: 480, damping: 46, mass: 0.8 };
   const iconSpring: Transition = { type: 'spring', stiffness: 520, damping: 34, mass: 0.6 };
@@ -83,6 +94,7 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
   const cancelRecording = () => {
     if (timerRef.current) clearInterval(timerRef.current);
     if (playbackTimerRef.current) clearInterval(playbackTimerRef.current);
+    playbackAnimationRef.current?.stop();
     setDuration(0);
     setPlaybackTime(0);
     setHasCompletedPlayback(false);
@@ -90,32 +102,41 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
     onCancel?.();
   };
 
+  const beginPlaybackTicker = () => {
+    playbackTimerRef.current = setInterval(() => {
+      setPlaybackTime((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+  };
+
   const startPlayback = () => {
+    setHasCompletedPlayback(false);
     setState(RecorderState.PLAYING);
     setPlaybackTime(duration);
-    setPlaySessionId((id) => id + 1);
-    playbackTimerRef.current = setInterval(() => {
-      setPlaybackTime((prev) => {
-        if (prev <= 1) {
-          finishPlayback();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    playbackDashOffset.set(1);
+    playbackAnimationRef.current = animateValue(playbackDashOffset, 0, {
+      duration: Math.max(duration, 0.1),
+      ease: 'linear',
+      onComplete: finishPlayback,
+    });
+    beginPlaybackTicker();
+  };
+
+  const pausePlayback = () => {
+    if (playbackTimerRef.current) clearInterval(playbackTimerRef.current);
+    playbackAnimationRef.current?.pause();
+    setState(RecorderState.PLAYBACK_PAUSED);
+  };
+
+  const resumePlayback = () => {
+    playbackAnimationRef.current?.play();
+    setState(RecorderState.PLAYING);
+    beginPlaybackTicker();
   };
 
   const finishPlayback = () => {
     if (playbackTimerRef.current) clearInterval(playbackTimerRef.current);
     setPlaybackTime(0);
     setHasCompletedPlayback(true);
-    setState(RecorderState.REVIEWING);
-  };
-
-  const stopPlayback = () => {
-    if (playbackTimerRef.current) clearInterval(playbackTimerRef.current);
-    setPlaybackTime(0);
-    setHasCompletedPlayback(false);
     setState(RecorderState.REVIEWING);
   };
 
@@ -140,20 +161,24 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
       if (playbackTimerRef.current) clearInterval(playbackTimerRef.current);
+      playbackAnimationRef.current?.stop();
     };
   }, []);
 
   const isRecordingOrPaused =
     state === RecorderState.RECORDING || state === RecorderState.PAUSED;
   const isReviewingOrPlaying =
-    state === RecorderState.REVIEWING || state === RecorderState.PLAYING;
+    state === RecorderState.REVIEWING ||
+    state === RecorderState.PLAYING ||
+    state === RecorderState.PLAYBACK_PAUSED;
   const isPaused = state === RecorderState.PAUSED;
+  const isPlaybackActiveOrPaused =
+    state === RecorderState.PLAYING || state === RecorderState.PLAYBACK_PAUSED;
 
   const showProgressStroke =
-    state === RecorderState.PLAYING ||
-    (state === RecorderState.REVIEWING && hasCompletedPlayback);
+    isPlaybackActiveOrPaused || (state === RecorderState.REVIEWING && hasCompletedPlayback);
 
-  const pillGlowOpacity = isRecordingOrPaused ? 0.85 : state === RecorderState.PLAYING ? 0.4 : 0;
+  const pillGlowOpacity = isRecordingOrPaused ? 0.85 : isPlaybackActiveOrPaused ? 0.4 : 0;
 
   const actionBtnClass = `w-16 h-16 rounded-full flex items-center justify-center shrink-0 glass-control`;
 
@@ -201,7 +226,6 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
                     transition={{ duration: 0.25 }}
                   >
                     <motion.rect
-                      key={playSessionId}
                       x="2"
                       y="2"
                       rx="9999"
@@ -213,12 +237,7 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
                       pathLength={1}
                       strokeDasharray="1"
                       strokeLinecap="round"
-                      initial={{ strokeDashoffset: 1 }}
-                      animate={{ strokeDashoffset: 0 }}
-                      transition={{
-                        duration: Math.max(duration, 0.1),
-                        ease: 'linear',
-                      }}
+                      style={{ strokeDashoffset: playbackDashOffset }}
                     />
                   </motion.svg>
                 )}
@@ -279,8 +298,10 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
                     whileTap={{ scale: 0.92 }}
                     onClick={
                       state === RecorderState.PLAYING
-                        ? stopPlayback
-                        : startPlayback
+                        ? pausePlayback
+                        : state === RecorderState.PLAYBACK_PAUSED
+                          ? resumePlayback
+                          : startPlayback
                     }
                     className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors ${
                       state === RecorderState.PLAYING
@@ -291,14 +312,14 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
                     <AnimatePresence mode="wait" initial={false}>
                       {state === RecorderState.PLAYING ? (
                         <motion.span
-                          key="stop-icon"
+                          key="pause-icon"
                           initial={{ opacity: 0, scale: 0.7 }}
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0, scale: 0.7 }}
                           transition={iconSpring}
                           className="glass-icon flex items-center justify-center"
                         >
-                          <Square size={22} fill="currentColor" />
+                          <Pause size={22} fill="currentColor" />
                         </motion.span>
                       ) : (
                         <motion.span
@@ -317,11 +338,7 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
 
                   <span className="glass-icon text-white flex items-center justify-center gap-0.5 text-[20px] font-bold tabular-nums transition-colors">
                     <AnimatedNumber
-                      value={
-                        state === RecorderState.PLAYING
-                          ? playbackTime
-                          : duration
-                      }
+                      value={isPlaybackActiveOrPaused ? playbackTime : duration}
                     />
                     <motion.span layout>s</motion.span>
                   </span>
