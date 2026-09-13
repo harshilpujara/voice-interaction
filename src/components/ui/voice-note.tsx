@@ -303,11 +303,7 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
                           ? resumePlayback
                           : startPlayback
                     }
-                    className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors ${
-                      state === RecorderState.PLAYING
-                        ? 'text-red-400'
-                        : 'text-white'
-                    }`}
+                    className="flex h-10 w-10 items-center justify-center rounded-full text-white transition-colors"
                   >
                     <AnimatePresence mode="wait" initial={false}>
                       {state === RecorderState.PLAYING ? (
