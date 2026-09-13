@@ -12,13 +12,28 @@ function App() {
     const video = videoRef.current;
     if (!video) return;
 
+    const play = () => {
+      // Autoplay can be silently blocked (especially on a domain the
+      // browser has no prior media-engagement with), and MSE-backed
+      // playback doesn't reliably honor the `autoplay` attribute the way
+      // a plain <video src> does, so kick playback explicitly.
+      void video.play().catch((err) => console.warn('Desktop video autoplay was blocked:', err));
+    };
+
     if (video.canPlayType('application/vnd.apple.mpegurl')) {
       video.src = DESKTOP_STREAM_URL;
-      return;
+      video.addEventListener('loadedmetadata', play);
+      return () => video.removeEventListener('loadedmetadata', play);
     }
 
     if (Hls.isSupported()) {
       const hls = new Hls();
+      hls.on(Hls.Events.MANIFEST_PARSED, play);
+      hls.on(Hls.Events.ERROR, (_event, data) => {
+        if (data.fatal) {
+          console.error('Desktop video HLS fatal error:', data.type, data.details);
+        }
+      });
       hls.loadSource(DESKTOP_STREAM_URL);
       hls.attachMedia(video);
       return () => hls.destroy();
