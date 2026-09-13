@@ -228,7 +228,8 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
                     <motion.rect
                       x="2"
                       y="2"
-                      rx="9999"
+                      rx="30"
+                      ry="30"
                       width="calc(100% - 4px)"
                       height="calc(100% - 4px)"
                       fill="none"
