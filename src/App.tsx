@@ -8,7 +8,7 @@ function App() {
 
   return (
     <div className="relative h-svh w-full overflow-hidden">
-      <GradientWave colors={['#0f172a', '#1e3a5f', '#0ea5e9', '#0f172a', '#155e75']} />
+      <GradientWave />
       <div className="bg-scrim" />
       <div className="relative z-10 flex h-full w-full items-end justify-center">
         <VoiceNote onSend={handleSend} />

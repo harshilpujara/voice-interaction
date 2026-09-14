@@ -230,6 +230,47 @@ export const VoiceNote: React.FC<VoiceNoteRecorderProps> = ({
         }
       }}
     >
+      {/* Shared optical filters behind every .glass-control surface: a
+          feDisplacementMap actually bends the pixels sampled from behind
+          the glass (true refraction/lensing, not just a blur), and a
+          fractal-noise grain gives the material a frosted, etched texture
+          instead of reading as flat crystal-clear glass. */}
+      <svg aria-hidden className="absolute h-0 w-0" style={{ position: 'absolute' }}>
+        <defs>
+          <filter id="glass-refraction" x="-20%" y="-20%" width="140%" height="140%">
+            <feTurbulence
+              type="fractalNoise"
+              baseFrequency="0.009 0.012"
+              numOctaves={2}
+              seed={7}
+              result="noise"
+            />
+            <feGaussianBlur in="noise" stdDeviation={2.5} result="softNoise" />
+            <feDisplacementMap
+              in="SourceGraphic"
+              in2="softNoise"
+              scale={34}
+              xChannelSelector="R"
+              yChannelSelector="G"
+            />
+          </filter>
+          <filter id="glass-grain">
+            <feTurbulence
+              type="fractalNoise"
+              baseFrequency="0.9"
+              numOctaves={2}
+              seed={3}
+              result="grain"
+            />
+            <feColorMatrix
+              in="grain"
+              type="matrix"
+              values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.05 0"
+            />
+          </filter>
+        </defs>
+      </svg>
+
       <div className="glass-group flex items-center p-1.5">
         <MotionConfig transition={spring}>
           <GlassSlot show={state !== RecorderState.IDLE} width={78}>

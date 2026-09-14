@@ -91,31 +91,44 @@
   pointer-events: none;
 }
 
-/* Liquid glass: a quiet, restrained optical material. At rest it should
-   barely announce itself — a thin refractive edge and a faint lift off
-   the backdrop, not a decorated "glassmorphism" card. Every control
-   (circle or capsule) shares this one surface so the group reads as a
-   single floating material rather than separate 3D chips.
+/* Liquid glass, modeled on Apple's own HIG description of the material
+   (developer.apple.com/design/human-interface-guidelines/materials):
+   this is the "clear" variant — used "for components that float above
+   media backgrounds... to create a more immersive content experience"
+   — so content behind it must stay visibly prominent, not be smeared
+   into a flat blurred tint. Five things build the illusion:
 
-   The tint leans dark/smoked (not a bright white wash) so the moving
-   video reads through as genuinely "behind glass" rather than washed
-   out; brightness is pulled slightly down (not boosted) in the blur so
-   the material never looks lit from within. The two-layer radial in
-   ::before (a soft light catch above, a faint dark pull below) stands
-   in for optical lensing — light gathering at the top curvature and
-   falling off toward the bottom — without a gooey/blob filter. */
+   1. REFRACTION — backdrop-filter references an SVG feDisplacementMap
+      (#glass-refraction, defined once in voice-note.tsx) that actually
+      bends the sampled pixels from behind the glass, rather than only
+      blurring them. This is the difference between "blur" and "glass".
+   2. DEPTH — a soft outer contact shadow lifts the material off the
+      backdrop; inset shadows fall off toward the bottom edge.
+   3. DISPERSION — two faint, complementary-hue inset rims (cool cyan
+      top-left, warm rose bottom-right) suggest chromatic fringing at
+      the refractive edge, the way a real lens splits light slightly.
+   4. FROST — ::after renders low-frequency fractal noise (#glass-grain)
+      as a barely-there etched texture instead of perfectly clear glass.
+   5. SPECULAR SPLAY — ::before is a single elongated highlight that
+      "splays" across the top curvature, standing in for a light source
+      catching the lensed surface, per Apple's glass reacting to light.
+
+   Per HIG guidance for the clear variant over bright content ("consider
+   adding a dark dimming layer of 35% opacity"), the base background is
+   that dimming layer alone — not a heavy tint baked into the blur. */
 .glass-control {
   position: relative;
   border-radius: 9999px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(20, 20, 24, 0.34);
-  backdrop-filter: blur(14px) saturate(130%) brightness(0.94);
-  -webkit-backdrop-filter: blur(14px) saturate(130%) brightness(0.94);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(8, 12, 18, 0.32);
+  backdrop-filter: url(#glass-refraction) blur(5px) saturate(150%) brightness(1.03);
+  -webkit-backdrop-filter: blur(6px) saturate(150%) brightness(1.03);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.2),
-    inset 0 -10px 14px -10px rgba(0, 0, 0, 0.45),
-    inset 0 0 18px rgba(0, 0, 0, 0.16),
-    0 2px 10px rgba(0, 0, 0, 0.22);
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset -10px -10px 16px -14px rgba(120, 210, 255, 0.5),
+    inset 10px 10px 16px -14px rgba(255, 190, 220, 0.4),
+    inset 0 -12px 16px -12px rgba(0, 0, 0, 0.4),
+    0 6px 18px -4px rgba(0, 0, 0, 0.35);
   overflow: hidden;
   transition:
     background 0.3s ease,
@@ -128,20 +141,29 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background:
-    radial-gradient(130% 65% at 50% -12%, rgba(255, 255, 255, 0.24), transparent 62%),
-    radial-gradient(90% 50% at 50% 118%, rgba(0, 0, 0, 0.22), transparent 60%);
+  background: radial-gradient(85% 40% at 38% -18%, rgba(255, 255, 255, 0.55), transparent 68%);
   mix-blend-mode: soft-light;
   pointer-events: none;
 }
 
+.glass-control::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  filter: url(#glass-grain);
+  mix-blend-mode: overlay;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 .glass-control:hover {
-  background: rgba(26, 26, 30, 0.4);
+  background: rgba(10, 14, 20, 0.38);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.26),
-    inset 0 -10px 14px -10px rgba(0, 0, 0, 0.45),
-    inset 0 0 18px rgba(0, 0, 0, 0.16),
-    0 4px 14px rgba(0, 0, 0, 0.28);
+    inset 0 1px 0 rgba(255, 255, 255, 0.34),
+    inset -10px -10px 16px -14px rgba(120, 210, 255, 0.6),
+    inset 10px 10px 16px -14px rgba(255, 190, 220, 0.48),
+    inset 0 -12px 16px -12px rgba(0, 0, 0, 0.4),
+    0 8px 22px -4px rgba(0, 0, 0, 0.4);
 }
 
 /* Keeps icons legible without a halo — a single soft contact shadow. */
@@ -155,11 +177,11 @@
 .glass-group {
   position: relative;
   border-radius: 9999px;
-  background: rgba(12, 12, 14, 0.16);
-  backdrop-filter: blur(7px) saturate(120%) brightness(0.97);
-  -webkit-backdrop-filter: blur(7px) saturate(120%) brightness(0.97);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  background: rgba(6, 10, 16, 0.14);
+  backdrop-filter: url(#glass-refraction) blur(3px) saturate(120%);
+  -webkit-backdrop-filter: blur(4px) saturate(120%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 /* The connective neck between two adjacent controls. It has no geometry
@@ -169,10 +191,10 @@
    pinching shut rather than two shapes fading past each other. */
 .glass-bridge {
   border-radius: 9999px;
-  background: rgba(20, 20, 24, 0.3);
-  backdrop-filter: blur(14px) saturate(130%) brightness(0.95);
-  -webkit-backdrop-filter: blur(14px) saturate(130%) brightness(0.95);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(8, 12, 18, 0.28);
+  backdrop-filter: url(#glass-refraction) blur(5px) saturate(150%) brightness(1.03);
+  -webkit-backdrop-filter: blur(6px) saturate(150%) brightness(1.03);
+  border: 1px solid rgba(255, 255, 255, 0.16);
 }
 
 /* Ambient red diffusion behind the recording pill: a soft blurred glow
