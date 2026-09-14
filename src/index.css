@@ -80,14 +80,15 @@
   }
 }
 
-/* A light, bottom-anchored legibility scrim over the animated gradient —
+/* A light, center-anchored legibility scrim over the animated gradient —
    the backdrop itself is never dimmed as a whole, just enough contrast
-   near the controls for the glass and its icons to stay readable. */
+   around the controls (now centered on screen) for the glass and its
+   icons to stay readable. */
 .bg-scrim {
   position: absolute;
   inset: 0;
   z-index: 5;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.32), transparent 42%);
+  background: radial-gradient(45% 35% at 50% 50%, rgba(0, 0, 0, 0.28), transparent 72%);
   pointer-events: none;
 }
 
