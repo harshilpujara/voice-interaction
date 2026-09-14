@@ -9,7 +9,6 @@ function App() {
   return (
     <div className="relative h-svh w-full overflow-hidden">
       <GradientWave />
-      <div className="bg-scrim" />
       <div className="relative z-10 flex h-full w-full items-center justify-center">
         <VoiceNote onSend={handleSend} />
       </div>

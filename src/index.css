@@ -80,18 +80,6 @@
   }
 }
 
-/* A light, center-anchored legibility scrim over the animated gradient —
-   the backdrop itself is never dimmed as a whole, just enough contrast
-   around the controls (now centered on screen) for the glass and its
-   icons to stay readable. */
-.bg-scrim {
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  background: radial-gradient(45% 35% at 50% 50%, rgba(0, 0, 0, 0.28), transparent 72%);
-  pointer-events: none;
-}
-
 /* Liquid glass, modeled on Apple's own HIG description of the material
    (developer.apple.com/design/human-interface-guidelines/materials):
    this is the "clear" variant — used "for components that float above
